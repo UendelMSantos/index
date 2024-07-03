@@ -1,52 +1,54 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <title> QR Code Scanner </title>
+
+    <script src="./node_modules/html5-qrcode/html5-qrcode.min.js"></script>
+
     <style>
-        #reader {
-            width: 100%;
-            max-width: 400px;
-            margin: auto;
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .container {
-            padding-top: 20px;
+        #reader {
+            width: 600px;
+        }
+        #result {
+            text-align: center;
+            font-size: 1.5rem;
         }
     </style>
 </head>
-<body>
-    <div class="container text-center">
-        <h1 class="my-4">QR Code Scanner</h1>
-        <div id="reader"></div>
-    </div>
+    <body>
+        <main>
+            <div id="reader"></div>
+            <div id="result"></div>
+        </main>
 
-    <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log(`Texto decodificado: ${decodedText}`);
-            alert(`Texto decodificado: ${decodedText}`);
-        }
+        <script>
 
-        function onScanFailure(error) {
-            console.warn(`Erro na leitura do QR Code: ${error}`);
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" }, // Preferência pela câmera traseira
-                {
-                    fps: 10, // Quadros por segundo
-                    qrbox: 250 // Tamanho da caixa de leitura do QR code
+            const scanner = new Html5QrcodeScanner('reader', {
+                qrbox: {
+                    with: 250,
+                    height: 250,
                 },
-                onScanSuccess,
-                onScanFailure
-            ).catch(err => {
-                console.error(`Erro ao iniciar o scanner de QR Code: ${err}`);
+                fps: 20,
             });
-        });
-    </script>
-</body>
+
+            scanner.render(success, error);
+
+            function success(result){
+                
+                document.getElementById('result').innerHTML = `
+                <h2>Success!</h2>
+                <p><a href="${result}"">${result}</a></p>    
+                `;
+
+            }
+
+        </script>
+    </body>
 </html>
