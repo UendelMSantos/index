@@ -65,9 +65,21 @@
             console.warn(`Erro na leitura do QR Code: ${error}`);
         }
 
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        document.addEventListener("DOMContentLoaded", function() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    let html5QrcodeScanner = new Html5QrcodeScanner(
+                        "reader", { fps: 10, qrbox: 250 });
+                    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                })
+                .catch(function(err) {
+                    console.error("Erro ao acessar a câmera: " + err);
+                });
+            } else {
+                console.error("Navegador não suporta acesso à câmera.");
+            }
+        });
     </script>
 </body>
 </html>
