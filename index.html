@@ -34,29 +34,40 @@
     </main>
 
     <script>
-        const scanner = new Html5QrcodeScanner('reader', {
-            qrbox: {
-                width: 250,
-                height: 250,
-            },
-            fps: 20,
-        });
-
-        scanner.render(success, error);
-
-        function success(result){
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`Texto decodificado: ${decodedText}`);
             document.getElementById('result').innerHTML = `
                 <h2>Success!</h2>
-                <p><a href="${result}">${result}</a></p>
+                <p><a href="${decodedText}" target="_blank">${decodedText}</a></p>
             `;
-
-            scanner.clear();
-            document.getElementById('reader').remove();
+            html5QrCode.stop().then(ignore => {
+                // Parou o scanner com sucesso
+            }).catch(err => {
+                // Falhou ao parar o scanner
+                console.error(`Erro ao parar o scanner de QR Code: ${err}`);
+            });
         }
 
-        function error(err){
-            console.error(err);
+        function onScanFailure(error) {
+            // Gerenciar erros de escaneamento
+            console.warn(`Erro na leitura do QR Code: ${error}`);
         }
+
+        // Inicializar o scanner
+        document.addEventListener("DOMContentLoaded", function() {
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, // Preferência pela câmera traseira
+                {
+                    fps: 10, // Quadros por segundo
+                    qrbox: 250 // Tamanho da caixa de leitura do QR code
+                },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error(`Erro ao iniciar o scanner de QR Code: ${err}`);
+            });
+        });
     </script>
 </body>
 </html>
