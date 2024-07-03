@@ -67,14 +67,27 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    let html5QrcodeScanner = new Html5QrcodeScanner(
-                        "reader", { fps: 10, qrbox: 250 });
-                    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                navigator.mediaDevices.enumerateDevices()
+                .then(function(devices) {
+                    let videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    let backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
+
+                    navigator.mediaDevices.getUserMedia({
+                        video: {
+                            deviceId: backCamera.deviceId
+                        }
+                    })
+                    .then(function(stream) {
+                        let html5QrcodeScanner = new Html5QrcodeScanner(
+                            "reader", { fps: 10, qrbox: 250 });
+                        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                    })
+                    .catch(function(err) {
+                        console.error("Erro ao acessar a câmera: " + err);
+                    });
                 })
                 .catch(function(err) {
-                    console.error("Erro ao acessar a câmera: " + err);
+                    console.error("Erro ao enumerar dispositivos: " + err);
                 });
             } else {
                 console.error("Navegador não suporta acesso à câmera.");
