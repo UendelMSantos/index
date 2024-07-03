@@ -33,7 +33,7 @@
             console.warn(`Erro na leitura do QR Code: ${error}`);
         }
 
-        function startScanner() {
+        document.addEventListener("DOMContentLoaded", function() {
             const html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start(
                 { facingMode: "environment" }, // Preferência pela câmera traseira
@@ -46,10 +46,6 @@
             ).catch(err => {
                 console.error(`Erro ao iniciar o scanner de QR Code: ${err}`);
             });
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            startScanner();
         });
     </script>
 </body>
