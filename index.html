@@ -1,72 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Scanner</title>
-
-    <!-- Carregar a biblioteca html5-qrcode de um CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-
     <style>
-        main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-        }
         #reader {
             width: 100%;
-            max-width: 600px;
+            max-width: 400px;
+            margin: auto;
         }
-        #result {
-            text-align: center;
-            font-size: 1.5rem;
-            margin-top: 20px;
+        .container {
+            padding-top: 20px;
+        }
+        .modal-dialog {
+            max-width: 90%;
+            margin: auto;
         }
     </style>
 </head>
 <body>
-    <main>
+    <div class="container text-center">
+        <h1 class="my-4">QR Code Scanner</h1>
         <div id="reader"></div>
-        <div id="result"></div>
-    </main>
+    </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="resultModal" tabindex="-1" role="dialog" aria-labelledby="resultModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resultModalLabel">Resultado da Leitura</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- Resultados da leitura do QR code serão exibidos aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`Texto decodificado: ${decodedText}`);
-            document.getElementById('result').innerHTML = `
-                <h2>Success!</h2>
-                <p><a href="${decodedText}" target="_blank">${decodedText}</a></p>
+            
+            let resultHtml = `
+                <p>Texto Decodificado: ${decodedText}</p>
             `;
-            html5QrCode.stop().then(ignore => {
-                // Parou o scanner com sucesso
-            }).catch(err => {
-                // Falhou ao parar o scanner
-                console.error(`Erro ao parar o scanner de QR Code: ${err}`);
-            });
+            document.getElementById('modal-body').innerHTML = resultHtml;
+            $('#resultModal').modal('show');
         }
 
         function onScanFailure(error) {
-            // Gerenciar erros de escaneamento
             console.warn(`Erro na leitura do QR Code: ${error}`);
         }
 
-        // Inicializar o scanner
         document.addEventListener("DOMContentLoaded", function() {
-            const html5QrCode = new Html5Qrcode('reader');
-            html5QrCode.start(
-                { facingMode: "environment" }, // Preferência pela câmera traseira
-                {
-                    fps: 10, // Quadros por segundo
-                    qrbox: 250 // Tamanho da caixa de leitura do QR code
-                },
-                onScanSuccess,
-                onScanFailure
-            ).catch(err => {
-                console.error(`Erro ao iniciar o scanner de QR Code: ${err}`);
-            });
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.enumerateDevices()
+                .then(function(devices) {
+                    let videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    let backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
+
+                    navigator.mediaDevices.getUserMedia({
+                        video: {
+                            deviceId: backCamera.deviceId
+                        }
+                    })
+                    .then(function(stream) {
+                        let html5QrcodeScanner = new Html5QrcodeScanner(
+                            "reader", { fps: 10, qrbox: 250 });
+                        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                    })
+                    .catch(function(err) {
+                        console.error("Erro ao acessar a câmera: " + err);
+                    });
+                })
+                .catch(function(err) {
+                    console.error("Erro ao enumerar dispositivos: " + err);
+                });
+            } else {
+                console.error("Navegador não suporta acesso à câmera.");
+            }
         });
     </script>
 </body>
