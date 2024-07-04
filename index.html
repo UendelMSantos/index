@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
+    <title>QR Code Scanner com Instascan</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/instascan/1.0.0/instascan.min.js"></script>
     <style>
-        #reader {
+        #preview {
             width: 100%;
             max-width: 400px;
             margin: auto;
+            border: 1px solid black;
         }
         .container {
             padding-top: 20px;
@@ -23,8 +24,8 @@
 </head>
 <body>
     <div class="container text-center">
-        <h1 class="my-4">QR Code Scanner</h1>
-        <div id="reader"></div>
+        <h1 class="my-4">QR Code Scanner com Instascan</h1>
+        <video id="preview" class="p-1 border"></video>
     </div>
 
     <!-- Modal -->
@@ -51,47 +52,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log(`Texto decodificado: ${decodedText}`);
-            
-            let resultHtml = `
-                <p>Texto Decodificado: ${decodedText}</p>
-            `;
-            document.getElementById('modal-body').innerHTML = resultHtml;
-            $('#resultModal').modal('show');
-        }
-
-        function onScanFailure(error) {
-            console.warn(`Erro na leitura do QR Code: ${error}`);
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.enumerateDevices()
-                .then(function(devices) {
-                    let videoDevices = devices.filter(device => device.kind === 'videoinput');
-                    let backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
-
-                    navigator.mediaDevices.getUserMedia({
-                        video: {
-                            deviceId: backCamera.deviceId
-                        }
-                    })
-                    .then(function(stream) {
-                        let html5QrcodeScanner = new Html5QrcodeScanner(
-                            "reader", { fps: 10, qrbox: 250 });
-                        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-                    })
-                    .catch(function(err) {
-                        console.error("Erro ao acessar a câmera: " + err);
-                    });
-                })
-                .catch(function(err) {
-                    console.error("Erro ao enumerar dispositivos: " + err);
-                });
-            } else {
-                console.error("Navegador não suporta acesso à câmera.");
-            }
+            let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+            scanner.addListener('scan', function (content) {
+                console.log(content);
+                let resultHtml = `
+                    <p>Texto Decodificado: ${content}</p>
+                `;
+                document.getElementById('modal-body').innerHTML = resultHtml;
+                $('#resultModal').modal('show');
+            });
+            Instascan.Camera.getCameras().then(function (cameras) {
+                if (cameras.length > 0) {
+                    scanner.start(cameras[0]);
+                } else {
+                    console.error('Nenhuma câmera encontrada.');
+                }
+            }).catch(function (e) {
+                console.error(e);
+            });
         });
     </script>
 </body>
